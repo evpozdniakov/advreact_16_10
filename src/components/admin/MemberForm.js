@@ -41,9 +41,4 @@ const validate = values => {
 export default reduxForm({
     form: 'member',
     validate,
-    initialValues: {
-        firstName: '',
-        lastName: 'ln',
-        email: 'ev@sdlfl.ru',
-    },
 })(MemberForm)

@@ -1,6 +1,7 @@
 import {Record} from 'immutable'
 import {reset} from 'redux-form';
 import {appName} from '../config'
+import {createSelector} from 'reselect'
 
 export const moduleName = 'people'
 
@@ -40,3 +41,7 @@ export function addMember(firstName, lastName, email) {
         dispatch(reset('member'))
     }
 }
+
+/* selectors */
+export const stateSelector = state => state[moduleName]
+export const membersSelector = createSelector(stateSelector, state => state.items)

@@ -1,9 +1,17 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import MemberForm from '../admin/MemberForm'
-import { addMember } from '../../ducks/people'
+import { addMember, membersSelector } from '../../ducks/people'
 
 class People extends Component {
+    get members() {
+        return this.props.members
+    }
+
+    get hasMembers() {
+        return this.members.length > 0
+    }
+
     curryAddMember() {
         return values => {
             const { firstName, lastName, email } = values
@@ -16,14 +24,34 @@ class People extends Component {
         return (
             <div>
                 <h1>People</h1>
-                {this.renderExistingPeople()}
-                {this.renderAddForm()}
+                <div className="members-ui">
+                    {this.renderMembers()}
+                    {this.renderAddForm()}
+                </div>
             </div>
         )
     }
 
-    renderExistingPeople() {
-        return null
+    renderMembers() {
+        if (!this.hasMembers) {
+            return <p className="no-members">There is no members yet.</p>
+        }
+
+        return (
+            <ul>
+                {this.members.map(this.renderMember.bind(this))}
+            </ul>
+        )
+    }
+
+    renderMember(item) {
+        const { firstName, lastName, email } = item
+
+        return (
+            <li>
+                {firstName} {lastName} <a href={`mailto:${email}`}>{email}</a>
+            </li>
+        )
     }
 
     renderAddForm() {
@@ -31,6 +59,10 @@ class People extends Component {
     }
 }
 
-export default connect(null, {
+export default connect(state => {
+    return {
+        members: membersSelector(state)
+    }
+}, {
     addMember,
 })(People)
