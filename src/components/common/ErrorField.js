@@ -6,11 +6,13 @@ class ErrorField extends Component {
     };
 
     render() {
-        const {input, meta: {error, touched}, type, label} = this.props
+        const {input, meta, type, label} = this.props
+        const {error, touched} = meta || {}
         const errorText = touched && error && <div style = {{color: 'red'}}>{error}</div>
         return (
-            <div>
-                {label} <input {...input} type = {type} />
+            <div className="error-field">
+                {label}<br/>
+                <input {...input} type = {type} />
                 {errorText}
             </div>
         )
