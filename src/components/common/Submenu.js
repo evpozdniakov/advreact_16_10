@@ -10,11 +10,11 @@ class Submenu extends Component {
     )
   }
 
-  renderSubmenuItem(item) {
+  renderSubmenuItem(item, index) {
     const { to, title } = item
 
     return (
-      <NavLink to={to} activeClassName="active">
+      <NavLink key={index} to={to} activeClassName="active">
         {title}
       </NavLink>
     )
