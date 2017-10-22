@@ -1,11 +1,14 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import MemberForm from '../admin/MemberForm'
+import { addMember } from '../../ducks/people'
 
 class People extends Component {
     curryAddMember() {
         return values => {
-            console.log('--- values:', values)
+            const { firstName, lastName, email } = values
+
+            this.props.addMember(firstName, lastName, email)
         }
     }
 
@@ -28,4 +31,6 @@ class People extends Component {
     }
 }
 
-export default People
+export default connect(null, {
+    addMember,
+})(People)
