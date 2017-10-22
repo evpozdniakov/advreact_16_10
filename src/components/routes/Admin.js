@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import Submenu from '../common/Submenu'
+import { Route } from 'react-router-dom'
+import People from './People'
 
 class Admin extends Component {
     static propTypes = {
@@ -22,6 +24,7 @@ class Admin extends Component {
             <div>
                 <h2>Admin Page</h2>
                 <Submenu links={links} />
+                <Route path="/admin/people" component={People} />
             </div>
         )
     }
