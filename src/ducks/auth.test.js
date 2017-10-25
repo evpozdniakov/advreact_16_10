@@ -1,4 +1,5 @@
 import firebase from 'firebase'
+import history from '../history'
 import {all, call, put, take} from 'redux-saga/effects'
 import {
     SIGN_UP_START, SIGN_UP_SUCCESS, SIGN_UP_ERROR,
@@ -71,7 +72,7 @@ describe('Sagas', () => {
     })
 
     test('signInSaga success', () => {
-        expect.assertions(4);
+        expect.assertions(5);
 
         const auth = firebase.auth()
         const email = 'email'
@@ -90,6 +91,9 @@ describe('Sagas', () => {
             type: SIGN_IN_SUCCESS,
             payload: {user},
         }))
+
+        expect(gen.next().value).toEqual(call(
+            [history, history.push], '/people'))
 
         expect(gen.next().value).toEqual(take(SIGN_IN_START))
     })

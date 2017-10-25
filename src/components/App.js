@@ -8,11 +8,16 @@ import AuthPage from './routes/Auth'
 import PersonPage from './routes/PersonPage'
 import Submenu from './common/Submenu'
 import {userAuthorized} from '../ducks/auth'
+import history from '../history'
 
 class App extends Component {
     static propTypes = {
 
     };
+
+    componentDidMount() {
+        history.push(this.props.authorized ? '/people' : '/auth/signin')
+    }
 
     render() {
         return (
