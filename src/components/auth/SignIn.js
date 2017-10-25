@@ -20,9 +20,20 @@ class SignIn extends Component {
                     <div>
                         <input type = 'submit'/>
                     </div>
+                    {this.renderError()}
                 </form>
             </div>
         )
+    }
+
+    renderError() {
+        const { signInError } = this.props
+
+        if (!signInError) {
+            return null
+        }
+
+        return <p className="error">{signInError}</p>
     }
 }
 
