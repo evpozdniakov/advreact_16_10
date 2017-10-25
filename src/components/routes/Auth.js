@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import {Route, NavLink} from 'react-router-dom'
+import {Route} from 'react-router-dom'
 import {connect} from 'react-redux'
 import {signUp, signIn} from '../../ducks/auth'
 import SignIn from '../auth/SignIn'
@@ -14,8 +14,6 @@ class AuthPage extends Component {
         return (
             <div>
                 <h2>Auth page</h2>
-                <NavLink to = '/auth/signin' activeStyle = {{color: 'red'}}>sign in</NavLink>
-                <NavLink to = '/auth/signup' activeStyle = {{color: 'red'}}>sign up</NavLink>
                 <Route path = '/auth/signin' render = {() => <SignIn onSubmit = {this.handleSignIn}/>}/>
                 <Route path = '/auth/signup' render = {() => <SignUp onSubmit = {this.handleSignUp}/>}/>
             </div>
