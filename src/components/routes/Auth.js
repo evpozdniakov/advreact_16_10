@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {Route, NavLink} from 'react-router-dom'
 import {connect} from 'react-redux'
-import {signUp, signIn, errorMessage} from '../../ducks/auth'
+import {signUp, signIn, errorMessage, userAuthorized} from '../../ducks/auth'
 import SignIn from '../auth/SignIn'
 import SignUp from '../auth/SignUp'
 
@@ -24,6 +24,7 @@ class AuthPage extends Component {
         const props = {
             onSubmit: this.handleSignIn,
             signInError: this.props.error,
+            shouldReset: this.props.authorized,
         }
 
         return <SignIn {...props} />
@@ -34,5 +35,6 @@ class AuthPage extends Component {
 }
 
 export default connect(state => ({
-    error: errorMessage(state)
+    error: errorMessage(state),
+    authorized: userAuthorized(state),
 }), { signIn, signUp, errorMessage })(AuthPage)

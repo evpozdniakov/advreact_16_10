@@ -6,6 +6,15 @@ class SignIn extends Component {
 
     };
 
+    shouldComponentUpdate(nextProps) {
+        if (nextProps.shouldReset) {
+            this.props.reset()
+            return false
+        }
+
+        return true
+    }
+
     render() {
         return (
             <div>
