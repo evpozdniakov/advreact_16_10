@@ -10,6 +10,7 @@ import {call, put, all, take} from 'redux-saga/effects'
 export const moduleName = 'auth'
 const prefix = `${appName}/${moduleName}`
 
+export const SIGN_IN_START = `${prefix}/SIGN_IN_START`
 export const SIGN_UP_START = `${prefix}/SIGN_UP_START`
 export const SIGN_UP_SUCCESS = `${prefix}/SIGN_UP_SUCCESS`
 export const SIGN_UP_ERROR = `${prefix}/SIGN_UP_ERROR`
@@ -30,6 +31,7 @@ export default function reducer(state = new ReducerRecord(), action) {
 
     switch (type) {
         case SIGN_UP_START:
+        case SIGN_IN_START:
             return state.set('loading', true)
 
         case SIGN_UP_SUCCESS:
@@ -49,6 +51,7 @@ export default function reducer(state = new ReducerRecord(), action) {
 
 export const stateSelector = state => state[moduleName]
 export const userSelector = createSelector(stateSelector, state => state.user)
+export const userAuthorized = createSelector(stateSelector, state => !!state.user)
 
 /**
  * Action Creators
@@ -56,6 +59,13 @@ export const userSelector = createSelector(stateSelector, state => state.user)
 export function signUp(email, password) {
     return {
         type: SIGN_UP_START,
+        payload: { email, password }
+    }
+}
+
+export function signIn(email, password) {
+    return {
+        type: SIGN_IN_START,
         payload: { email, password }
     }
 }
