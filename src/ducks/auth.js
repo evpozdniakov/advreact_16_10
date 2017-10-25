@@ -51,6 +51,7 @@ export default function reducer(state = new ReducerRecord(), action) {
 
 export const stateSelector = state => state[moduleName]
 export const userSelector = createSelector(stateSelector, state => state.user)
+export const userAuthorizedSelector = createSelector(stateSelector, state => !!state.user)
 
 /**
  * Action Creators

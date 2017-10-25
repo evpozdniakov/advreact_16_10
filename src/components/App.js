@@ -1,10 +1,13 @@
 import React, { Component } from 'react'
-import {Route, NavLink} from 'react-router-dom'
+import {Route} from 'react-router-dom'
+import {connect} from 'react-redux'
 import ProtectedRoute from './common/ProtectedRoute'
 import AdminPage from './routes/Admin'
 import AuthPage from './routes/Auth'
 import PersonPage from './routes/PersonPage'
 import EventsPage from './routes/EventsPage'
+import Submenu from './common/Submenu'
+import {userAuthorizedSelector} from '../ducks/auth'
 
 class App extends Component {
     static propTypes = {
@@ -15,11 +18,7 @@ class App extends Component {
         return (
             <div>
                 <h1>Hello world</h1>
-                <ul>
-                    <li><NavLink to='/admin' activeStyle = {{color: 'red'}}>admin</NavLink></li>
-                    <li><NavLink to='/people' activeStyle = {{color: 'red'}}>people</NavLink></li>
-                    <li><NavLink to='/events' activeStyle = {{color: 'red'}}>events</NavLink></li>
-                </ul>
+                {this.renderSubmenu()}
                 <ProtectedRoute path = '/admin' component = {AdminPage}/>
                 <ProtectedRoute path = '/people' component={PersonPage}/>
                 <ProtectedRoute path = '/events' component={EventsPage}/>
@@ -27,6 +26,43 @@ class App extends Component {
             </div>
         )
     }
+
+    renderSubmenu() {
+        const links = []
+
+        if (this.props.authorized) {
+            links.push({
+                to: '/admin',
+                title: 'Admin',
+            }, {
+                to: '/people',
+                title: 'People',
+            }, {
+                to: '/events',
+                title: 'Events',
+            }, {
+                to: '/logout',
+                title: 'Logout',
+            })
+        }
+        else {
+            links.push({
+                to: '/auth/signin',
+                title: 'Sign in',
+            }, {
+                to: '/auth/signup',
+                title: 'Sign up',
+            })
+        }
+
+        const props = {
+            links,
+        }
+
+        return <Submenu {...props} />
+    }
 }
 
-export default App
+export default connect(state => ({
+    authorized: userAuthorizedSelector(state)
+}), null, null, { pure: false })(App)
