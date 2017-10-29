@@ -1,4 +1,4 @@
-// import {all, takeEvery, put, call} from 'redux-saga/effects'
+import {all, takeEvery, put, call, select} from 'redux-saga/effects'
 import {appName} from '../config'
 import firebase from 'firebase'
 import {createSelector} from 'reselect'
@@ -9,7 +9,7 @@ import {createSelector} from 'reselect'
 export const moduleName = 'events'
 const prefix = `${appName}/${moduleName}`
 
-export const FETCH_UP_TO = `${prefix}/FETCH_UP_TO`
+export const FETCH_UP_TO_REQUEST = `${prefix}/FETCH_UP_TO_REQUEST`
 export const FETCH_UP_TO_SUCCESS = `${prefix}/FETCH_UP_TO_SUCCESS`
 
 /**
@@ -34,17 +34,19 @@ export default function reducer(state=getInitState(), action) {
     const { type, payload } = action
 
     switch (type) {
-        case FETCH_UP_TO:
+        case FETCH_UP_TO_REQUEST:
             return {
                 ...clone(state),
                 loading: true,
             }
 
         case FETCH_UP_TO_SUCCESS: {
+            let clonedState = clone(state)
+
             return {
-                ...clone(state),
+                ...clonedState,
                 loading: false,
-                entities: payload.entities,
+                entities: clonedState.entities.concat(payload.entities)
             }
         }
 
@@ -59,58 +61,9 @@ export default function reducer(state=getInitState(), action) {
  * */
 
 export function fetchUpTo(requestedNumber, resolve) {
-    return (dispatch, getState) => {
-        const state = getState()
-        const loadedCount = loadedEventCountSelector(state)
-        const lastLoadedEventUid = lastLoadedEventUidSelector(state)
-
-        if (loadedCount >= requestedNumber) {
-            resolve()
-            return
-        }
-
-        dispatch({
-            type: FETCH_UP_TO,
-            payload: {requestedNumber, resolve},
-        })
-
-        const chunkCount = requestedNumber - loadedCount
-
-        firebase.database().ref('events')
-            .orderByKey()
-            .limitToFirst(chunkCount + 2)
-            .startAt(lastLoadedEventUid || '')
-            .once('value', snapshot => {
-                const state = getState()
-                const loadedEventKyes = loadedEventKyesSelector(state)
-                const rawEntities = snapshot.val()
-
-                const newEntities = Object.keys(rawEntities)
-                    .reduce((uniq, uid) => {
-                        if (loadedEventKyes.includes(uid)) {
-                            return uniq
-                        }
-
-                        if (uniq.includes(uid)) {
-                            return uniq
-                        }
-
-                        return uniq.concat(uid)
-                    }, [])
-                    .map(uid => ({
-                        uid,
-                        ...rawEntities[uid],
-                    }))
-
-                const entities = state.events.entities.concat(newEntities)
-
-                dispatch({
-                    type: FETCH_UP_TO_SUCCESS,
-                    payload: {entities},
-                })
-
-                resolve()
-            })
+    return {
+        type: FETCH_UP_TO_REQUEST,
+        payload: {requestedNumber, resolve},
     }
 }
 
@@ -124,3 +77,60 @@ export const loadedEventKyesSelector = createSelector(loadedEventSelector, loade
 export const loadedEventCountSelector = createSelector(loadedEventSelector, loadedEvents => loadedEvents.length)
 export const lastLoadedEventSelector = createSelector(loadedEventSelector, loadedEventCountSelector, (loadedEvents, loadedEventCount) => loadedEvents[loadedEventCount - 1] || {})
 export const lastLoadedEventUidSelector = createSelector(lastLoadedEventSelector, lastLoadedEvent => lastLoadedEvent.uid || '')
+
+/**
+ * Sagas
+ * */
+
+export function* fetchUpToSaga(action) {
+    const eventsRef = firebase.database().ref('events')
+    const loadedCount = yield select(loadedEventCountSelector)
+    const lastLoadedEventUid = yield select(lastLoadedEventUidSelector)
+    const { requestedNumber, resolve } = action.payload
+
+    if (loadedCount >= requestedNumber) {
+        return call(resolve)
+    }
+
+    const chunkCount = requestedNumber - loadedCount
+    const query1 = yield call([eventsRef, eventsRef.orderByKey])
+    const query2 = yield call([query1, query1.limitToFirst], chunkCount)
+    const query3 = yield call([query2, query2.startAt], lastLoadedEventUid || '')
+    const snapshot = yield call([query3, query3.once], 'value')
+    const loadedEventKyes = yield select(loadedEventKyesSelector)
+    const entities = yield call(filterEntities, snapshot, loadedEventKyes)
+
+    yield put({
+        type: FETCH_UP_TO_SUCCESS,
+        payload: {entities},
+    })
+
+    return call(resolve)
+}
+
+export function* saga() {
+    yield all([
+        takeEvery(FETCH_UP_TO_REQUEST, fetchUpToSaga),
+    ])
+}
+
+function filterEntities(snapshot, loadedEventKyes) {
+    const rawEntities = snapshot.val()
+
+    return Object.keys(rawEntities)
+        .reduce((uniq, uid) => {
+            if (loadedEventKyes.includes(uid)) {
+                return uniq
+            }
+
+            if (uniq.includes(uid)) {
+                return uniq
+            }
+
+            return uniq.concat(uid)
+        }, [])
+        .map(uid => ({
+            uid,
+            ...rawEntities[uid],
+        }))
+}
