@@ -1,7 +1,7 @@
 // import {all, takeEvery, put, call} from 'redux-saga/effects'
 import {appName} from '../config'
 import firebase from 'firebase'
-// import {createSelector} from 'reselect'
+import {createSelector} from 'reselect'
 
 /**
  * Constants
@@ -20,7 +20,7 @@ function getInitState() {
     return {
         loading: false,
         entities: [],
-        lastLoadedIndex: null,
+        lastLoadedIndex: -1,
         lastLoadedUid: null,
     }
 }
@@ -65,7 +65,7 @@ export default function reducer(state=getInitState(), action) {
  * Action creators
  * */
 
-export function fetchUpTo(limit) {
+export function fetchUpTo(limit, resolve) {
     return (dispatch, getState) => {
         const {
             lastLoadedIndex,
@@ -74,9 +74,14 @@ export function fetchUpTo(limit) {
 
         const loadedCount = lastLoadedIndex === null ? 0 : lastLoadedIndex + 1
 
+        if (loadedCount >= limit) {
+            resolve()
+            return
+        }
+
         dispatch({
             type: FETCH_UP_TO,
-            payload: {limit},
+            payload: {limit, resolve},
         })
 
         firebase.database().ref('events')
@@ -84,9 +89,9 @@ export function fetchUpTo(limit) {
             .limitToFirst(limit - loadedCount)
             .startAt(lastLoadedUid || '')
             .once('value', snapshot => {
-                const rawEntities = Object.keys(snapshot.val())
+                const rawEntities = snapshot.val()
 
-                const newEntities = rawEntities.map(uid => ({
+                const newEntities = Object.keys(rawEntities).map(uid => ({
                     uid,
                     ...rawEntities[uid],
                 }))
@@ -97,6 +102,16 @@ export function fetchUpTo(limit) {
                     type: FETCH_UP_TO_SUCCESS,
                     payload: {entities},
                 })
+
+                resolve()
             })
     }
 }
+
+/**
+ * Selectors
+ * */
+
+export const stateSelector = state => state[moduleName]
+export const eventListSelector = createSelector(stateSelector, state => state.entities)
+export const lastLoadedIndexSelector = createSelector(stateSelector, state => state.lastLoadedIndex)

@@ -3,31 +3,33 @@ import {Table, Column, InfiniteLoader} from 'react-virtualized'
 import {connect} from 'react-redux'
 import {
     fetchUpTo,
+    lastLoadedIndexSelector,
+    eventListSelector,
 } from '../../ducks/events2'
 // import Loader from '../common/Loader'
 import 'react-virtualized/styles.css'
 
 class EventTableVirtualized extends Component {
-    render() {
+    renderTest() {
         return (
             <div>
                 <p>
-                    <button onClick={() => {this.props.fetchUpTo(12)}}>
+                    <button onClick={() => {this.props.fetchUpTo(12, ()=>{console.log('done 12')})}}>
                         Fetch first 12
                     </button>
                 </p>
                 <p>
-                    <button onClick={() => {this.props.fetchUpTo(20)}}>
+                    <button onClick={() => {this.props.fetchUpTo(20, ()=>{console.log('done 20')})}}>
                         Fetch up to 20
                     </button>
                 </p>
                 <p>
-                    <button onClick={() => {this.props.fetchUpTo(40)}}>
+                    <button onClick={() => {this.props.fetchUpTo(40, ()=>{console.log('done 40')})}}>
                         Fetch up to 40
                     </button>
                 </p>
                 <p>
-                    <button onClick={() => {this.props.fetchUpTo(100)}}>
+                    <button onClick={() => {this.props.fetchUpTo(100, ()=>{console.log('done 100')})}}>
                         Fetch up to 100
                     </button>
                 </p>
@@ -36,24 +38,20 @@ class EventTableVirtualized extends Component {
     }
 
 
-    renderBla() {
-        return <div>Event page 2</div>
+    render() {
+        // return <div>Event page 2</div>
         // if (this.props.loading) return <Loader />
 
-        const { testRowLoaded } = this.props;
+        const { lastLoadedIndexSelector } = this.props;
 
         const props = {
-            isRowLoaded: index => {
-                // return false
-                console.log('--- call isRowLoaded', index)
-                const loaded = testRowLoaded(index)
-                console.log('--- loaded?', loaded)
-                return loaded
+            isRowLoaded: index => (index <= lastLoadedIndexSelector),
+            loadMoreRows: ({stopIndex}) => {
+                return new Promise(resolve => {
+                    this.props.fetchUpTo(stopIndex, resolve)
+                })
             },
-            loadMoreRows: ({startIndex, stopIndex}) => {
-                return this.props.loadMoreEvents(startIndex, stopIndex);
-            },
-            rowCount: 100,
+            rowCount: 1000,
             // minimumBatchSize
             // threshold
 
@@ -62,8 +60,6 @@ class EventTableVirtualized extends Component {
         return (
             <InfiniteLoader {...props}>
                 {({onRowsRendered, registerChild}) => {
-                    // debugger;
-
                     return (
                         <Table
                             height={500}
@@ -72,7 +68,7 @@ class EventTableVirtualized extends Component {
                             rowHeaderHeight={40}
                             rowGetter={this.rowGetter}
                             // rowCount={this.props.events.length}
-                            rowCount={100}
+                            rowCount={1000}
                             overscanRowCount={0}
                             onRowClick={({ rowData }) => this.props.selectEvent(rowData.uid)}
                             onRowsRendered={onRowsRendered}
@@ -100,15 +96,6 @@ class EventTableVirtualized extends Component {
         )
     }
 
-    // renderTable(onRowsRendered, registerChild) {
-    //     debugger
-    //     // if (this.props.loading) return <Loader />
-
-    //     return (
-            
-    //     )
-    // }
-
     rowGetter = ({ index }) => {
         const { events=[] } = this.props
 
@@ -124,7 +111,9 @@ class EventTableVirtualized extends Component {
     }
 }
 
-export default connect((state, props) => ({
+export default connect(state => ({
+    lastLoadedIndexSelector: lastLoadedIndexSelector(state),
+    events: eventListSelector(state),
 }), {
     fetchUpTo,
 })(EventTableVirtualized)
