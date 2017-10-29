@@ -2,8 +2,7 @@ import React, { Component } from 'react'
 import {Table, Column, InfiniteLoader} from 'react-virtualized'
 import {connect} from 'react-redux'
 import {
-    fetchFirst20,
-    fetchFrom21to40,
+    fetchUpTo,
 } from '../../ducks/events2'
 // import Loader from '../common/Loader'
 import 'react-virtualized/styles.css'
@@ -13,13 +12,23 @@ class EventTableVirtualized extends Component {
         return (
             <div>
                 <p>
-                    <button onClick={() => {this.props.fetchFirst20()}}>
-                        Fetch first 20
+                    <button onClick={() => {this.props.fetchUpTo(12)}}>
+                        Fetch first 12
                     </button>
                 </p>
                 <p>
-                    <button onClick={() => {this.props.fetchFrom21to40()}}>
-                        Fetch from 21 to 40
+                    <button onClick={() => {this.props.fetchUpTo(20)}}>
+                        Fetch up to 20
+                    </button>
+                </p>
+                <p>
+                    <button onClick={() => {this.props.fetchUpTo(40)}}>
+                        Fetch up to 40
+                    </button>
+                </p>
+                <p>
+                    <button onClick={() => {this.props.fetchUpTo(100)}}>
+                        Fetch up to 100
                     </button>
                 </p>
             </div>
@@ -117,6 +126,5 @@ class EventTableVirtualized extends Component {
 
 export default connect((state, props) => ({
 }), {
-    fetchFirst20,
-    fetchFrom21to40,
+    fetchUpTo,
 })(EventTableVirtualized)
