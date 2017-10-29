@@ -3,58 +3,26 @@ import {Table, Column, InfiniteLoader} from 'react-virtualized'
 import {connect} from 'react-redux'
 import {
     fetchUpTo,
-    lastLoadedIndexSelector,
-    eventListSelector,
+    loadedEventCountSelector,
+    loadedEventSelector,
 } from '../../ducks/events2'
 // import Loader from '../common/Loader'
 import 'react-virtualized/styles.css'
 
 class EventTableVirtualized extends Component {
-    renderTest() {
-        return (
-            <div>
-                <p>
-                    <button onClick={() => {this.props.fetchUpTo(12, ()=>{console.log('done 12')})}}>
-                        Fetch first 12
-                    </button>
-                </p>
-                <p>
-                    <button onClick={() => {this.props.fetchUpTo(20, ()=>{console.log('done 20')})}}>
-                        Fetch up to 20
-                    </button>
-                </p>
-                <p>
-                    <button onClick={() => {this.props.fetchUpTo(40, ()=>{console.log('done 40')})}}>
-                        Fetch up to 40
-                    </button>
-                </p>
-                <p>
-                    <button onClick={() => {this.props.fetchUpTo(100, ()=>{console.log('done 100')})}}>
-                        Fetch up to 100
-                    </button>
-                </p>
-            </div>
-        )
-    }
-
-
     render() {
-        // return <div>Event page 2</div>
-        // if (this.props.loading) return <Loader />
-
-        const { lastLoadedIndexSelector } = this.props;
+        const { loadedEventCount } = this.props;
 
         const props = {
-            isRowLoaded: index => (index <= lastLoadedIndexSelector),
+            isRowLoaded: index => index < loadedEventCount,
             loadMoreRows: ({stopIndex}) => {
                 return new Promise(resolve => {
                     this.props.fetchUpTo(stopIndex, resolve)
                 })
             },
-            rowCount: 1000,
-            // minimumBatchSize
-            // threshold
-
+            rowCount: 596,
+            // minimumBatchSize: 100,
+            // threshold: 100,
         }
 
         return (
@@ -67,8 +35,8 @@ class EventTableVirtualized extends Component {
                             rowHeight={40}
                             rowHeaderHeight={40}
                             rowGetter={this.rowGetter}
-                            // rowCount={this.props.events.length}
-                            rowCount={1000}
+                            // rowCount={this.props.loadedEvents.length}
+                            rowCount={596}
                             overscanRowCount={0}
                             onRowClick={({ rowData }) => this.props.selectEvent(rowData.uid)}
                             onRowsRendered={onRowsRendered}
@@ -97,23 +65,19 @@ class EventTableVirtualized extends Component {
     }
 
     rowGetter = ({ index }) => {
-        const { events=[] } = this.props
+        const { loadedEvents=[] } = this.props
 
-        if (!events[index]) {
-            return {
-                title: 'title',
-                where: 'where',
-                when: 'when',
-            }
+        if (!loadedEvents[index]) {
+            return {}
         }
 
-        return this.props.events[index]
+        return this.props.loadedEvents[index]
     }
 }
 
 export default connect(state => ({
-    lastLoadedIndexSelector: lastLoadedIndexSelector(state),
-    events: eventListSelector(state),
+    loadedEventCount: loadedEventCountSelector(state),
+    loadedEvents: loadedEventSelector(state),
 }), {
     fetchUpTo,
 })(EventTableVirtualized)

@@ -20,8 +20,6 @@ function getInitState() {
     return {
         loading: false,
         entities: [],
-        lastLoadedIndex: -1,
-        lastLoadedUid: null,
     }
 }
 
@@ -43,15 +41,10 @@ export default function reducer(state=getInitState(), action) {
             }
 
         case FETCH_UP_TO_SUCCESS: {
-            let lastLoadedIndex = payload.entities.length - 1
-            let lastLoadedUid = payload.entities[lastLoadedIndex].uid
-
             return {
                 ...clone(state),
                 loading: false,
                 entities: payload.entities,
-                lastLoadedIndex,
-                lastLoadedUid,
             }
         }
 
@@ -65,38 +58,51 @@ export default function reducer(state=getInitState(), action) {
  * Action creators
  * */
 
-export function fetchUpTo(limit, resolve) {
+export function fetchUpTo(requestedNumber, resolve) {
     return (dispatch, getState) => {
-        const {
-            lastLoadedIndex,
-            lastLoadedUid,
-        } = getState().events
+        const state = getState()
+        const loadedCount = loadedEventCountSelector(state)
+        const lastLoadedEventUid = lastLoadedEventUidSelector(state)
 
-        const loadedCount = lastLoadedIndex === null ? 0 : lastLoadedIndex + 1
-
-        if (loadedCount >= limit) {
+        if (loadedCount >= requestedNumber) {
             resolve()
             return
         }
 
         dispatch({
             type: FETCH_UP_TO,
-            payload: {limit, resolve},
+            payload: {requestedNumber, resolve},
         })
+
+        const chunkCount = requestedNumber - loadedCount
 
         firebase.database().ref('events')
             .orderByKey()
-            .limitToFirst(limit - loadedCount)
-            .startAt(lastLoadedUid || '')
+            .limitToFirst(chunkCount + 2)
+            .startAt(lastLoadedEventUid || '')
             .once('value', snapshot => {
+                const state = getState()
+                const loadedEventKyes = loadedEventKyesSelector(state)
                 const rawEntities = snapshot.val()
 
-                const newEntities = Object.keys(rawEntities).map(uid => ({
-                    uid,
-                    ...rawEntities[uid],
-                }))
+                const newEntities = Object.keys(rawEntities)
+                    .reduce((uniq, uid) => {
+                        if (loadedEventKyes.includes(uid)) {
+                            return uniq
+                        }
 
-                const entities = getState().events.entities.concat(newEntities)
+                        if (uniq.includes(uid)) {
+                            return uniq
+                        }
+
+                        return uniq.concat(uid)
+                    }, [])
+                    .map(uid => ({
+                        uid,
+                        ...rawEntities[uid],
+                    }))
+
+                const entities = state.events.entities.concat(newEntities)
 
                 dispatch({
                     type: FETCH_UP_TO_SUCCESS,
@@ -113,5 +119,8 @@ export function fetchUpTo(limit, resolve) {
  * */
 
 export const stateSelector = state => state[moduleName]
-export const eventListSelector = createSelector(stateSelector, state => state.entities)
-export const lastLoadedIndexSelector = createSelector(stateSelector, state => state.lastLoadedIndex)
+export const loadedEventSelector = createSelector(stateSelector, state => state.entities)
+export const loadedEventKyesSelector = createSelector(loadedEventSelector, loadedEvents => loadedEvents.map(item => item.uid))
+export const loadedEventCountSelector = createSelector(loadedEventSelector, loadedEvents => loadedEvents.length)
+export const lastLoadedEventSelector = createSelector(loadedEventSelector, loadedEventCountSelector, (loadedEvents, loadedEventCount) => loadedEvents[loadedEventCount - 1] || {})
+export const lastLoadedEventUidSelector = createSelector(lastLoadedEventSelector, lastLoadedEvent => lastLoadedEvent.uid || '')
