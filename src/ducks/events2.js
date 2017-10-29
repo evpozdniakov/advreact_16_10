@@ -1,7 +1,9 @@
 import {all, takeEvery, put, call, select} from 'redux-saga/effects'
-import {appName} from '../config'
+import {Record, OrderedMap, OrderedSet} from 'immutable'
 import firebase from 'firebase'
 import {createSelector} from 'reselect'
+import {appName} from '../config'
+import {fbToEntities} from './utils'
 
 /**
  * Constants
@@ -12,42 +14,42 @@ const prefix = `${appName}/${moduleName}`
 export const FETCH_UP_TO_REQUEST = `${prefix}/FETCH_UP_TO_REQUEST`
 export const FETCH_UP_TO_SUCCESS = `${prefix}/FETCH_UP_TO_SUCCESS`
 
+
+
 /**
  * Reducer
  * */
 
-function getInitState() {
-    return {
-        loading: false,
-        entities: [],
-    }
-}
+export const ReducerRecord = Record({
+    loading: false,
+    loaded: false,
+    entities: new OrderedMap({}),
+    selected: new OrderedSet([])
+})
 
-function clone(state) {
-    return {
-        ...state,
-        entities: state.entities.map(item => ({...item})),
-    }
-}
+export const EventRecord = Record({
+    uid: null,
+    month: null,
+    submissionDeadline: null,
+    title: null,
+    url: null,
+    when: null,
+    where: null
+})
 
-export default function reducer(state=getInitState(), action) {
+export default function reducer(state=new ReducerRecord(), action) {
     const { type, payload } = action
 
     switch (type) {
         case FETCH_UP_TO_REQUEST:
-            return {
-                ...clone(state),
-                loading: true,
-            }
+            return state.set('loading', true)
 
         case FETCH_UP_TO_SUCCESS: {
-            let clonedState = clone(state)
+            let newEntities = fbToEntities(payload.entities, EventRecord)
 
-            return {
-                ...clonedState,
-                loading: false,
-                entities: clonedState.entities.concat(payload.entities)
-            }
+            return state
+                .set('loading', false)
+                .set('entities', state.get('entities').merge(newEntities))
         }
 
         default:
@@ -72,7 +74,7 @@ export function fetchUpTo(requestedNumber, resolve) {
  * */
 
 export const stateSelector = state => state[moduleName]
-export const loadedEventSelector = createSelector(stateSelector, state => state.entities)
+export const loadedEventSelector = createSelector(stateSelector, state => state.get('entities').toArray())
 export const loadedEventKyesSelector = createSelector(loadedEventSelector, loadedEvents => loadedEvents.map(item => item.uid))
 export const loadedEventCountSelector = createSelector(loadedEventSelector, loadedEvents => loadedEvents.length)
 export const lastLoadedEventSelector = createSelector(loadedEventSelector, loadedEventCountSelector, (loadedEvents, loadedEventCount) => loadedEvents[loadedEventCount - 1] || {})
@@ -97,8 +99,7 @@ export function* fetchUpToSaga(action) {
     const query2 = yield call([query1, query1.limitToFirst], chunkCount)
     const query3 = yield call([query2, query2.startAt], lastLoadedEventUid || '')
     const snapshot = yield call([query3, query3.once], 'value')
-    const loadedEventKyes = yield select(loadedEventKyesSelector)
-    const entities = yield call(filterEntities, snapshot, loadedEventKyes)
+    const entities = snapshot.val()
 
     yield put({
         type: FETCH_UP_TO_SUCCESS,
@@ -112,25 +113,4 @@ export function* saga() {
     yield all([
         takeEvery(FETCH_UP_TO_REQUEST, fetchUpToSaga),
     ])
-}
-
-function filterEntities(snapshot, loadedEventKyes) {
-    const rawEntities = snapshot.val()
-
-    return Object.keys(rawEntities)
-        .reduce((uniq, uid) => {
-            if (loadedEventKyes.includes(uid)) {
-                return uniq
-            }
-
-            if (uniq.includes(uid)) {
-                return uniq
-            }
-
-            return uniq.concat(uid)
-        }, [])
-        .map(uid => ({
-            uid,
-            ...rawEntities[uid],
-        }))
 }
