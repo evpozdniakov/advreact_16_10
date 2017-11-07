@@ -18,6 +18,7 @@ class CustomDragLayer extends Component {
         const DragPreview = item.DragPreview
 
         if (!DragPreview) return null
+        if (!offset) return null
 
         const style = {
             transform: `translate(${offset.x}px, ${offset.y}px)`

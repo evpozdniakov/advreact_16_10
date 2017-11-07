@@ -43,7 +43,7 @@ export default function reducer(state = new ReducerState(), action) {
 
     switch (type) {
         case FETCH_ALL_SUCCESS:
-            return state
+            return !payload ? state : state
                 .set('loading', false)
                 .set('loaded', true)
                 .set('entities', fbToEntities(payload, PersonRecord))
