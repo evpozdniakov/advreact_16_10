@@ -7,6 +7,7 @@ import AuthPage from './routes/Auth'
 import PersonPage from './routes/PersonPage'
 import EventsPage from './routes/EventsPage'
 import CustomDragLayer from './CustomDragLayer'
+import Garbage from './Garbage'
 import Submenu from './common/Submenu'
 import {userAuthorizedSelector} from '../ducks/auth'
 
@@ -18,6 +19,7 @@ class App extends Component {
     render() {
         return (
             <div>
+                <Garbage />
                 <h1>Hello world</h1>
                 {this.renderSubmenu()}
                 <ProtectedRoute path = '/admin' component = {AdminPage}/>
