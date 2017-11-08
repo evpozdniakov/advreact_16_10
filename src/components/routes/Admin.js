@@ -14,7 +14,7 @@ class Admin extends Component {
                 <h2>Admin Page</h2>
                 <SelectedEvents/>
                 <PeopleList/>
-                <EventList/>
+                <EventList allowSelectEvents={true} />
             </div>
         )
     }

@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import {connect} from 'react-redux'
 import {moduleName, fetchLazy, selectEvent, eventListSelector} from '../../ducks/events'
 import {Table, Column, InfiniteLoader} from 'react-virtualized'
@@ -7,7 +8,7 @@ import 'react-virtualized/styles.css'
 
 export class EventList extends Component {
     static propTypes = {
-
+        allowSelectEvents: PropTypes.bool
     };
 
     componentDidMount() {
@@ -68,8 +69,10 @@ export class EventList extends Component {
     }
 
     handleRowClick = (rowData) => {
-        const {selectEvent} = this.props
-        selectEvent && selectEvent(rowData.uid)
+        if (this.allowSelectEvents === true) {
+            const {selectEvent} = this.props
+            selectEvent && selectEvent(rowData.uid)
+        }
     }
 
     rowRenderer = props => {

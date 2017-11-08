@@ -28,8 +28,8 @@ class Garbage extends Component {
 
 const spec = {
     drop(props, monitor) {
-        const { uid } = monitor.getItem()
-        props.deleteEvent(uid)
+        const { id } = monitor.getItem()
+        props.deleteEvent(id)
     }
 }
 
