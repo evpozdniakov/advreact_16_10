@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import {DropTarget} from 'react-dnd'
+import { deleteEvent } from '../ducks/events'
 
 const baseStyle = {
   width: 100,
@@ -25,7 +26,12 @@ class Garbage extends Component {
   }
 }
 
-const spec = {}
+const spec = {
+    drop(props, monitor) {
+        const { uid } = monitor.getItem()
+        props.deleteEvent(uid)
+    }
+}
 
 const collect = (connect, monitor) => ({
     connectDropTarget: connect.dropTarget(),
@@ -33,6 +39,6 @@ const collect = (connect, monitor) => ({
     hovered: monitor.isOver()
 })
 
-export default connect(null, null)(
+export default connect(null, {deleteEvent})(
   DropTarget('event', spec, collect)(Garbage)
 )

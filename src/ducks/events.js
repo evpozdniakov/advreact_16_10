@@ -18,6 +18,10 @@ export const FETCH_LAZY_REQUEST = `${prefix}/FETCH_LAZY_REQUEST`
 export const FETCH_LAZY_START = `${prefix}/FETCH_LAZY_START`
 export const FETCH_LAZY_SUCCESS = `${prefix}/FETCH_LAZY_SUCCESS`
 
+export const DELETE_EVENT_REQUEST = `${prefix}/DELETE_EVENT_REQUEST`
+export const DELETE_EVENT_START = `${prefix}/DELETE_EVENT_START`
+export const DELETE_EVENT_SUCCESS = `${prefix}/DELETE_EVENT_SUCCESS`
+
 export const SELECT_EVENT = `${prefix}/SELECT_EVENT`
 
 
@@ -103,6 +107,13 @@ export function selectEvent(uid) {
 export function fetchLazy() {
     return {
         type: FETCH_LAZY_REQUEST
+    }
+}
+
+export function deleteEvent(uid) {
+    return {
+        type: DELETE_EVENT_REQUEST,
+        payload: {uid},
     }
 }
 
