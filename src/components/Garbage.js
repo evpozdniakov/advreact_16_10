@@ -34,5 +34,5 @@ const collect = (connect, monitor) => ({
 })
 
 export default connect(null, null)(
-  DropTarget('person', spec, collect)(Garbage)
+  DropTarget('event', spec, collect)(Garbage)
 )
