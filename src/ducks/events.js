@@ -90,6 +90,8 @@ export const loadingSelector = createSelector(stateSelector, state => state.load
 export const loadedSelector = createSelector(stateSelector, state => state.loaded)
 export const selectionSelector = createSelector(stateSelector, state => state.selected.toArray())
 export const eventListSelector = createSelector(entitiesSelector, entities => entities.valueSeq().toArray())
+export const idSelector = (state, props) => props.id
+export const eventSelector = createSelector(entitiesSelector, idSelector, (entities, id) => entities.get(id))
 export const selectedEventsSelector = createSelector(entitiesSelector, selectionSelector, (entities, selection) =>
     selection.map(uid => entities.get(uid))
 )

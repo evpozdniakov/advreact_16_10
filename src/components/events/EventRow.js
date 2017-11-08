@@ -1,8 +1,14 @@
 import React, { Component } from 'react'
 import {DragSource} from 'react-dnd'
 import { defaultTableRowRenderer as DefaultTableRowRenderer } from 'react-virtualized'
+import {getEmptyImage} from 'react-dnd-html5-backend'
+import DragPreview from './EventDragPreview'
 
 class EventRow extends Component {
+    componentDidMount() {
+        this.props.connectPreview(getEmptyImage())
+    }
+
     render() {
         const { key, connectDragSource } = this.props
 
@@ -17,20 +23,21 @@ class EventRow extends Component {
 const spec = {
     beginDrag(props) {
         return {
-            uid: props.rowData.uid,
-            // DragPreview
+            id: props.rowData.uid,
+            DragPreview
         }
     },
 
-    endDrag() {
+    /*endDrag() {
         console.log('---', 'endDrag')
-    }
+    }*/
 }
 
 const collect = (connect, monitor) => ({
     connectDragSource: connect.dragSource(),
-    // connectPreview: connect.dragPreview(),
-    // isDragging: monitor.isDragging()
+    connectPreview: connect.dragPreview(),
+    // isDragging: monitor.isDragging(),
+    // canDrag: monitor.canDrag(),
 })
 
 export default DragSource('event', spec, collect)(EventRow)

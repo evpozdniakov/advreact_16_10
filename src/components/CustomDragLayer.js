@@ -47,7 +47,7 @@ class CustomDragLayer extends Component {
 
 const collect = (monitor) => ({
     isDragging: monitor.isDragging(),
-    offset: monitor.getSourceClientOffset(),
+    offset: monitor.getClientOffset(),
     item: monitor.getItem()
 })
 
