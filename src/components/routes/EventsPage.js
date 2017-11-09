@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import EventsTable from '../events/VirtualizedLazyTable'
+import Garbage from '../common/Garbage'
 
 class EventsPage extends Component {
     static propTypes = {
@@ -10,6 +11,7 @@ class EventsPage extends Component {
         return (
             <div>
                 <EventsTable />
+                <Garbage />
             </div>
         )
     }

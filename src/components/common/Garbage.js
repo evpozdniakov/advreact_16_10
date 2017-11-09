@@ -1,14 +1,14 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import {DropTarget} from 'react-dnd'
-import { deleteEvent } from '../ducks/events'
+import { deleteEvent } from '../../ducks/events'
 
 const baseStyle = {
-  width: 100,
-  height: 100,
-  background: '#fcc',
-  margin: 20,
+  margin: '20px 0',
+  padding: 10,
+  display: 'inline-block',
   borderRadius: 10,
+  opacity: .5,
 }
 
 class Garbage extends Component {
@@ -17,11 +17,13 @@ class Garbage extends Component {
 
     const style = {
       ...baseStyle,
-      border: `5px dashed ${hovered ? '#f66' : 'transparent'}`,
+      border: `5px dashed ${hovered ? '#666' : 'transparent'}`,
     }
 
     return connectDropTarget(
-      <div style={style}>Garbage</div>
+      <div style={style}>
+        <img src="/assets/trash-can.png" width={100} height={100} />
+      </div>
     )
   }
 }
