@@ -5,6 +5,7 @@ import {put, call, takeEvery, all, select} from 'redux-saga/effects'
 import firebase from 'firebase'
 import {createSelector} from 'reselect'
 import {fbToEntities} from './utils'
+import { DELETE_EVENT_SUCCESS } from './events'
 
 /**
  * Constants
@@ -53,6 +54,18 @@ export default function reducer(state = new ReducerState(), action) {
 
         case ADD_EVENT_SUCCESS:
             return state.setIn(['entities', payload.personId, 'events'], payload.events)
+
+        case DELETE_EVENT_SUCCESS: {
+            return state.entities.reduce((res, person) => {
+                return person.events.includes(payload.uid)
+                    ? res.setIn(['entities', person.uid], new PersonRecord({
+                        ...person.toJSON(),
+                        events: person.events.filter(uid => uid !== payload.uid)
+                    }))
+                    : res
+            }, state)
+        }
+
 
         default:
             return state
