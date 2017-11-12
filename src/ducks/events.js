@@ -201,10 +201,8 @@ firebase.database().ref('events')
     .startAt(lastUid)
 
 */
-export function* saga() {
-    yield all([
-        takeEvery(FETCH_ALL_REQUEST, fetchAllSaga),
-        fetchLazySaga(),
-        takeEvery(DELETE_EVENT_REQUEST, deleteEventSaga)
-    ])
-}
+export const sagas = [
+    // takeEvery(FETCH_ALL_REQUEST, fetchAllSaga),
+    fetchLazySaga(),
+    takeEvery(DELETE_EVENT_REQUEST, deleteEventSaga),
+]

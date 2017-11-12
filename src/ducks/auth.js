@@ -135,10 +135,8 @@ export function * watchStatusChangeSaga() {
     }
 }
 
-export function * saga() {
-    yield all([
-        signUpSaga(),
-        signInSaga(),
-        watchStatusChangeSaga()
-    ])
-}
+export const sagas = [
+    signUpSaga(),
+    signInSaga(),
+    watchStatusChangeSaga()
+]

@@ -115,7 +115,7 @@ export function * addPersonSaga(action) {
     yield put(reset('person'))
 }
 
-export function * fetchAllSaga() {
+/*export function * fetchAllSaga() {
     yield put({
         type: FETCH_ALL_START
     })
@@ -129,7 +129,7 @@ export function * fetchAllSaga() {
         payload: snapshot.val()
     })
 
-}
+}*/
 
 export function * addEventToPersonSaga({ payload: { eventId, personId } }) {
     const eventsRef = firebase.database().ref(`people/${personId}/events`)
@@ -145,7 +145,8 @@ export function * addEventToPersonSaga({ payload: { eventId, personId } }) {
     })
 }
 
-export const syncPeopleWithShortPollingSaga = function * () {
+/*export const syncPeopleWithShortPollingSaga = function * () {
+    debugger
     try {
         while (true) {
             console.log('---', 'fetching users');
@@ -157,19 +158,19 @@ export const syncPeopleWithShortPollingSaga = function * () {
             console.log('---', 123, 'saga was cancelled')
         }
     }
-}
+}*/
 
-export const cancelableSyncSaga = function * () {
+/*export const cancelableSyncSaga = function * () {
     const res = yield race({
         sync: syncPeopleWithShortPollingSaga(),
         timeout: delay(6000)
     })
-/*
-    const task = yield fork(syncPeopleWithShortPollingSaga)
-    yield delay(6000)
-    yield cancel(task)
-*/
-}
+
+    // const task = yield fork(syncPeopleWithShortPollingSaga)
+    // yield delay(6000)
+    // yield cancel(task)
+
+}*/
 
 const createPeopleSocket = () => eventChannel(emit => {
     const ref = firebase.database().ref('people')
@@ -180,11 +181,9 @@ const createPeopleSocket = () => eventChannel(emit => {
     return () => ref.off('value', callback)
 })
 
-export const realtimePeopleSyncSaga = function * () {
-    const chan = yield call(createPeopleSocket)
-
+export function* startRealtimePeopleSyncSaga(chan) {
     while (true) {
-        const { data } = yield take(chan)
+        const {data} = yield take(chan)
 
         yield put({
             type: FETCH_ALL_SUCCESS,
@@ -193,11 +192,48 @@ export const realtimePeopleSyncSaga = function * () {
     }
 }
 
-export function * saga() {
-    yield spawn(realtimePeopleSyncSaga)
-
-    yield all([
-        takeEvery(ADD_PERSON_REQUEST, addPersonSaga),
-        takeEvery(ADD_EVENT_REQUEST, addEventToPersonSaga)
-    ])
+function* stopRealtimePeopleSyncSaga(chan) {
+    yield call(navigateFromPeople)
+    yield call([chan, chan.close])
 }
+
+function* navigateToPeople() {
+    while (true) {
+        const { payload } = yield take('@@router/LOCATION_CHANGE')
+        const { pathname } = payload
+
+        if (pathname === '/people') {
+            break
+        }
+    }
+}
+
+function* navigateFromPeople() {
+    while (true) {
+        const { payload } = yield take('@@router/LOCATION_CHANGE')
+        const { pathname } = payload
+
+        if (pathname !== '/people') {
+            break
+        }
+    }
+}
+
+function* toggleRealtimePeopleSyncSaga() {
+    while (true) {
+        yield call(navigateToPeople)
+        
+        const chan = yield call(createPeopleSocket)
+
+        yield race({
+            task: call(startRealtimePeopleSyncSaga, chan),
+            cancel: call(stopRealtimePeopleSyncSaga, chan),
+        })
+    }
+}
+
+export const sagas = [
+    toggleRealtimePeopleSyncSaga(),
+    takeEvery(ADD_PERSON_REQUEST, addPersonSaga),
+    takeEvery(ADD_EVENT_REQUEST, addEventToPersonSaga),
+]

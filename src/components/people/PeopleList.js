@@ -10,7 +10,7 @@ class PeopleList extends Component {
     };
 
     componentDidMount() {
-        this.props.fetchAll()
+        // this.props.fetchAll()
     }
 
     render() {
