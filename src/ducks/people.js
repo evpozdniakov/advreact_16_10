@@ -47,7 +47,7 @@ export default function reducer(state = new ReducerState(), action) {
             return state
                 .set('loading', false)
                 .set('loaded', true)
-                .set('entities', fbToEntities(payload, PersonRecord))
+                .set('entities', fbToEntities(payload, PersonRecord).concat().reverse())
 
         case ADD_PERSON_SUCCESS:
             return state.setIn(['entities', payload.uid], new PersonRecord(payload))
